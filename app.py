@@ -9,7 +9,8 @@ from linebot.exceptions import (
 from linebot.models import \*
 
 #======python的函數庫==========
-import tempfile, os
+import tempfile
+import os
 import datetime
 import openai
 import time
@@ -18,6 +19,7 @@ import traceback
 
 app = Flask(__name__)
 static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
+
 # Channel Access Token
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
 # Channel Secret
@@ -31,7 +33,7 @@ def GPT_response(text):
     response = openai.Completion.create(model="gpt-4o-mini", prompt=text, temperature=0.5, max_tokens=500)
     print(response)
     # 重組回應
-    answer = response['choices'][0]['text'].replace('。','')
+    answer = response['choices'][0]['text'].replace('。', '')
     return answer
 
 
@@ -62,7 +64,7 @@ def handle_message(event):
     except:
         print(traceback.format_exc())
         line_bot_api.reply_message(event.reply_token, TextSendMessage('你所使用的OPENAI API key額度可能已經超過，請於後台Log內確認錯誤訊息'))
-        
+
 
 @handler.add(PostbackEvent)
 def handle_message(event):
@@ -77,8 +79,8 @@ def welcome(event):
     name = profile.display_name
     message = TextSendMessage(text=f'{name}歡迎加入')
     line_bot_api.reply_message(event.reply_token, message)
-        
-import os
+
+
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
