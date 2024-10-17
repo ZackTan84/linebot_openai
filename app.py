@@ -1,15 +1,23 @@
 from flask import Flask, request, abort
-from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
+
+from linebot import (
+    LineBotApi, WebhookHandler
+)
+from linebot.exceptions import (
+    InvalidSignatureError
+)
 from linebot.models import *
 
 #======python的函數庫==========
-import os
+import tempfile, os
+import datetime
 import openai
+import time
 import traceback
 #======python的函數庫==========
 
 app = Flask(__name__)
+static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
 
 # Channel Access Token
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
@@ -22,9 +30,9 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 conversation_history = []
 
 def GPT_response(messages):
-    # 接收回應，使用 gpt-4o-mini 模型
+    # 接收回應
     response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",  # 修改为 gpt-4o-mini 模型
+        model="gpt-3.5-turbo",
         messages=messages,
         temperature=0.5,
         max_tokens=500
@@ -66,7 +74,7 @@ def handle_message(event):
         conversation_history.append({"role": "assistant", "content": GPT_answer})
         
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=GPT_answer))
-    except Exception as e:
+    except:
         print(traceback.format_exc())
         line_bot_api.reply_message(
             event.reply_token, 
@@ -74,7 +82,7 @@ def handle_message(event):
         )
 
 @handler.add(PostbackEvent)
-def handle_postback(event):
+def handle_message(event):
     print(event.postback.data)
 
 @handler.add(MemberJoinedEvent)
@@ -85,7 +93,3 @@ def welcome(event):
     name = profile.display_name
     message = TextSendMessage(text=f'{name}歡迎加入')
     line_bot_api.reply_message(event.reply_token, message)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))  # 适应 Render 环境
-```
