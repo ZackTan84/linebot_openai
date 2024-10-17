@@ -77,7 +77,52 @@ def welcome(event):
     name = profile.display_name
     message = TextSendMessage(text=f'{name}歡迎加入')
     line_bot_api.reply_message(event.reply_token, message)
-        
+
+
+# 使用List記憶的對話
+
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage, SystemMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from rich import print as pprint
+
+from dotenv import load_dotenv
+load_dotenv()
+
+# 初始化一個歷史對話列表，包含初始的系統訊息
+messages = [
+("system", "你只能根據我問的內容回答問題，並且記住我問的所有答案"),
+]
+
+# 設定LangChain的Chat模型與輸出解析器
+chat = ChatOpenAI(temperature=.7, model='gpt-3.5-turbo')
+str_parser = StrOutputParser()
+
+  
+# 建立一個函數來處理每次對話，並將歷史對話加入到Prompt中
+def chat_with_memory(input_text):
+    # 加入新的使用者訊息到歷史對話中
+    messages.append(("human", input_text))
+    # 將歷史對話轉換成適合LangChain的格式
+    prompt_1 = ChatPromptTemplate.from_messages(messages)
+    # 連接Prompt與Chat模型
+    chain_1 = prompt_1 | chat | str_parser
+    # 執行對話並獲取回應
+    response = chain_1.invoke({"input": input_text})
+    # 將AI的回應加入到歷史對話中
+    messages.append(("ai", response))
+    return response
+
+# 進行對話循環，並不斷保存歷史對話
+while True:
+    question = input("請輸入問題:")
+    if not question.strip():
+        break
+    response = chat_with_memory(question)
+
+# 顯示AI回應
+pprint(response)
         
 import os
 if __name__ == "__main__":
