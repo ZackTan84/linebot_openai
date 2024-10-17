@@ -1,12 +1,6 @@
-```python
 from flask import Flask, request, abort
-
-from linebot import (
-    LineBotApi, WebhookHandler
-)
-from linebot.exceptions import (
-    InvalidSignatureError
-)
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
 from linebot.models import *
 
 #======python的函數庫==========
@@ -28,7 +22,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 conversation_history = []
 
 def GPT_response(messages):
-    # 接收回應
+    # 接收回應，使用 gpt-4o-mini 模型
     response = openai.ChatCompletion.create(
         model="gpt-4o-mini",  # 修改为 gpt-4o-mini 模型
         messages=messages,
@@ -80,7 +74,7 @@ def handle_message(event):
         )
 
 @handler.add(PostbackEvent)
-def handle_message(event):
+def handle_postback(event):
     print(event.postback.data)
 
 @handler.add(MemberJoinedEvent)
@@ -91,3 +85,7 @@ def welcome(event):
     name = profile.display_name
     message = TextSendMessage(text=f'{name}歡迎加入')
     line_bot_api.reply_message(event.reply_token, message)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))  # 适应 Render 环境
+```
