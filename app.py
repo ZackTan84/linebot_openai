@@ -1,3 +1,4 @@
+```python
 from flask import Flask, request, abort
 
 from linebot import (
@@ -9,15 +10,12 @@ from linebot.exceptions import (
 from linebot.models import *
 
 #======python的函數庫==========
-import tempfile, os
-import datetime
+import os
 import openai
-import time
 import traceback
 #======python的函數庫==========
 
 app = Flask(__name__)
-static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
 
 # Channel Access Token
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
@@ -32,7 +30,7 @@ conversation_history = []
 def GPT_response(messages):
     # 接收回應
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",  # 修改为 gpt-4o-mini 模型
         messages=messages,
         temperature=0.5,
         max_tokens=500
@@ -74,7 +72,7 @@ def handle_message(event):
         conversation_history.append({"role": "assistant", "content": GPT_answer})
         
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=GPT_answer))
-    except:
+    except Exception as e:
         print(traceback.format_exc())
         line_bot_api.reply_message(
             event.reply_token, 
