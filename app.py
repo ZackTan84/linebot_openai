@@ -41,6 +41,26 @@ def GPT_response(messages):
     # 提取 GPT 的回复
     answer = response['choices'][0]['message']['content']
     return answer
+    
+# DALL·E 3 图像生成
+def DALL_E_image(prompt):
+    response = openai.Image.create(
+        model="dall-e-3",
+        prompt=prompt,
+        size="512x512"
+    )
+    image_url = response['data'][0]['url']
+    return image_url
+
+# Whisper 音频转文字
+def Whisper_transcribe(audio_path):
+    with open(audio_path, "rb") as audio_file:
+        response = openai.Audio.transcribe(
+            model="whisper-1",
+            file=audio_file
+        )
+    transcript = response['text']
+    return transcript
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
