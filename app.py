@@ -32,7 +32,7 @@ conversation_history = []
 def GPT_response(messages):
     # 接收回應
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4.0",  # 修改成 GPT-4.0
         messages=messages,
         temperature=0.5,
         max_tokens=500
