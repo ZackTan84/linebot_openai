@@ -1,4 +1,5 @@
 from flask import Flask, request, abort
+
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -6,8 +7,14 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import *
-import os
+
+#======python的函數庫==========
+import tempfile, os
+import datetime
 import openai
+import time
+import traceback
+#======python的函數庫==========
 
 app = Flask(__name__)
 static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
@@ -25,7 +32,7 @@ conversation_history = []
 def GPT_response(messages):
     # 接收回應
     response = openai.ChatCompletion.create(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         messages=messages,
         temperature=0.5,
         max_tokens=500
