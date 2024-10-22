@@ -83,8 +83,7 @@ def handle_message(event):
             event.reply_token, 
             TextSendMessage('你所使用的OPENAI API key額度可能已經超過，請於後台Log內確認錯誤訊息')
         )
-# 設定您的API金鑰
-openai.api_key = 'sk-g2X2mzv12RE7QeYPi_D6YE-8QguvL9WVWmZeUZLtctT3BlbkFJkWTdOgGd1rIquD5Xx8pcb4ObnaDxtOVbTMEhuKTxoA'
+
 assistants_url = 'https://platform.openai.com/assistants'  # 这是一个假设的URL，实际可能不同
 
 def fetch_assistants_data():
