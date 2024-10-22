@@ -14,7 +14,6 @@ import datetime
 import openai
 import time
 import traceback
-import requests
 #======python的函數庫==========
 
 app = Flask(__name__)
@@ -33,7 +32,7 @@ conversation_history = []
 def GPT_response(messages):
     # 接收回應
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-0125",
+        model="gpt-4o-mini",
         messages=messages,
         temperature=0.5,
         max_tokens=500
@@ -42,8 +41,6 @@ def GPT_response(messages):
     # 提取 GPT 的回复
     answer = response['choices'][0]['message']['content']
     return answer
-    
-
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
@@ -83,41 +80,6 @@ def handle_message(event):
             event.reply_token, 
             TextSendMessage('你所使用的OPENAI API key額度可能已經超過，請於後台Log內確認錯誤訊息')
         )
-
-assistants_url = 'https://platform.openai.com/assistants'  # 这是一个假设的URL，实际可能不同
-
-def fetch_assistants_data():
-    headers = {
-        "Authorization": f"Bearer {openai.api_key}"
-    }
-    response = requests.get(assistants_url, headers=headers)
-    if response.status_code == 200:
-        return response.json()  # 返回解析后的Assitants数据
-    else:
-        print("Error fetching assistants data:", response.status_code)
-        return None
-
-def generate_response(user_prompt, assistants_data):
-    # 将助理的数据处理成适合的格式，合并到prompt中
-    assistants_info = "\n".join([f"Assistant ID: {assistant['id']}, Info: {assistant['info']}" for assistant in assistants_data])
-    prompt = f"{assistants_info}\nUser Prompt: {user_prompt}"
-    
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        max_tokens=150
-    )
-    return response.choices[0].text.strip()
-
-if __name__ == "__main__":
-    user_prompt = input("請輸入您的問題：")
-    assistants_data = fetch_assistants_data()
-    
-    if assistants_data:
-        answer = generate_response(user_prompt, assistants_data)
-        print("回應：", answer)
-    else:
-        print("無法獲取Assistants資料，無法生成回應。")
 
 @handler.add(PostbackEvent)
 def handle_message(event):
