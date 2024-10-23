@@ -1,57 +1,48 @@
 from flask import Flask, request, abort
-
-from linebot import (
-    LineBotApi, WebhookHandler
-)
-from linebot.exceptions import (
-    InvalidSignatureError
-)
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
 from linebot.models import \*
-
-#======python的函數庫==========
 import os
 import openai
 import traceback
-#======python的函數庫==========
 
 app = Flask(__name__)
+static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
 
-# Channel Access Token，从环境变量中读取
+# 读取环境变量中的LINE Channel Access Token和Channel Secret
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
-# Channel Secret，从环境变量中读取
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
-# OPENAI API Key初始化設定
+# 读取环境变量中的OpenAI API Key，并进行初始化
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# 用户对话历史记录变量
+# 用于存储对话历史
 conversation_history = []
 
-def get_GPT_response(messages):
+def GPT_response(messages):
     try:
-        # 调用OpenAI的ChatCompletion API
+        # 调用OpenAI的ChatCompletion API，使用指定的模型ID
         response = openai.ChatCompletion.create(
-            # 使用在OpenAI上新增的assistant模型ID
-            model="asst_tHl6O766wFQ7oQN1TaIjKg2A",
+            model="gpt-4o-mini",
             messages=messages,
             temperature=0.5,
             max_tokens=500
         )
-
-        # 提取 GPT 的回复
+        # 提取GPT的回复
         answer = response['choices'][0]['message']['content']
         return answer
     except Exception as e:
         print(f"Error communicating with OpenAI: {e}")
         return "抱歉，我無法處理你的請求。"
 
-# 監聽所有來自 /callback 的 Post Request
+# 监听所有来自 /callback 的 POST 请求
 @app.route("/callback", methods=['POST'])
 def callback():
-    # 获取X-Line-Signature头签名
+    # 获取X-Line-Signature头
     signature = request.headers['X-Line-Signature']
-    # 获取请求body
+    # 获取请求体内容
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
+    
     # 处理webhook body
     try:
         handler.handle(body, signature)
@@ -59,36 +50,37 @@ def callback():
         abort(400)
     return 'OK'
 
-# 處理訊息
+# 处理讯息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     global conversation_history  # 声明为全局变量
     msg = event.message.text
 
-    # 将用户消息添加到对话历史记录
+    # 将用户消息添加到对话历史
     conversation_history.append({"role": "user", "content": msg})
     
     try:
-        # 获取GPT的回复
-        GPT_answer = get_GPT_response(conversation_history)
+        GPT_answer = GPT_response(conversation_history)
         print(GPT_answer)
 
-        # 将GPT的回复添加到对话历史记录
+        # 将GPT的回复添加到对话历史
         conversation_history.append({"role": "assistant", "content": GPT_answer})
-
-        # 使用LINE Messaging API回复用户
+        
+        # 使用LINE API回复用户消息
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=GPT_answer))
     except Exception as e:
         print(traceback.format_exc())
         line_bot_api.reply_message(
             event.reply_token, 
-            TextSendMessage(text='发生错误，请稍后再试。')
+            TextSendMessage(text='你所使用的OPENAI API key額度可能已經超過，請於後台Log內確認錯誤訊息')
         )
 
+# 处理Postback事件
 @handler.add(PostbackEvent)
 def handle_postback(event):
     print(event.postback.data)
 
+# 新成员加入事件
 @handler.add(MemberJoinedEvent)
 def welcome(event):
     uid = event.joined.members[0].user_id
@@ -99,4 +91,5 @@ def welcome(event):
     line_bot_api.reply_message(event.reply_token, message)
 
 if __name__ == "__main__":
+    # 运行 Flask 应用
     app.run(port=5000)
