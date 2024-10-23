@@ -6,51 +6,53 @@ from linebot import (
 from linebot.exceptions import (
     InvalidSignatureError
 )
-from linebot.models import *
+from linebot.models import \*
 
 #======python的函數庫==========
-import tempfile, os
-import datetime
+import os
 import openai
-import time
 import traceback
 #======python的函數庫==========
 
 app = Flask(__name__)
-static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
 
-# Channel Access Token
+# Channel Access Token，从环境变量中读取
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
-# Channel Secret
+# Channel Secret，从环境变量中读取
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 # OPENAI API Key初始化設定
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# 用于存储对话历史
+# 用户对话历史记录变量
 conversation_history = []
 
-def GPT_response(messages):
-    # 接收回應
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        temperature=0.5,
-        max_tokens=500
-    )
+def get_GPT_response(messages):
+    try:
+        # 调用OpenAI的ChatCompletion API
+        response = openai.ChatCompletion.create(
+            # 使用在OpenAI上新增的assistant模型ID
+            model="asst_tHl6O766wFQ7oQN1TaIjKg2A",
+            messages=messages,
+            temperature=0.5,
+            max_tokens=500
+        )
 
-    # 提取 GPT 的回复
-    answer = response['choices'][0]['message']['content']
-    return answer
+        # 提取 GPT 的回复
+        answer = response['choices'][0]['message']['content']
+        return answer
+    except Exception as e:
+        print(f"Error communicating with OpenAI: {e}")
+        return "抱歉，我無法處理你的請求。"
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
 def callback():
-    # get X-Line-Signature header value
+    # 获取X-Line-Signature头签名
     signature = request.headers['X-Line-Signature']
-    # get request body as text
+    # 获取请求body
     body = request.get_data(as_text=True)
     app.logger.info("Request body: " + body)
-    # handle webhook body
+    # 处理webhook body
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
@@ -63,26 +65,28 @@ def handle_message(event):
     global conversation_history  # 声明为全局变量
     msg = event.message.text
 
-    # 将用户消息添加到对话历史
+    # 将用户消息添加到对话历史记录
     conversation_history.append({"role": "user", "content": msg})
     
     try:
-        GPT_answer = GPT_response(conversation_history)
+        # 获取GPT的回复
+        GPT_answer = get_GPT_response(conversation_history)
         print(GPT_answer)
 
-        # 将 GPT 的回复添加到对话历史
+        # 将GPT的回复添加到对话历史记录
         conversation_history.append({"role": "assistant", "content": GPT_answer})
-        
+
+        # 使用LINE Messaging API回复用户
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=GPT_answer))
-    except:
+    except Exception as e:
         print(traceback.format_exc())
         line_bot_api.reply_message(
             event.reply_token, 
-            TextSendMessage('你所使用的OPENAI API key額度可能已經超過，請於後台Log內確認錯誤訊息')
+            TextSendMessage(text='发生错误，请稍后再试。')
         )
 
 @handler.add(PostbackEvent)
-def handle_message(event):
+def handle_postback(event):
     print(event.postback.data)
 
 @handler.add(MemberJoinedEvent)
@@ -93,3 +97,6 @@ def welcome(event):
     name = profile.display_name
     message = TextSendMessage(text=f'{name}歡迎加入')
     line_bot_api.reply_message(event.reply_token, message)
+
+if __name__ == "__main__":
+    app.run(port=5000)
