@@ -57,6 +57,54 @@ def callback():
         abort(400)
     return 'OK'
 
+
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
+handler = WebhookHandler(LINE_CHANNEL_SECRET)
+
+def get_openai_response(prompt):
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {OPENAI_API_KEY}',
+    }
+
+    data = {
+        "model": "asst_tHl6O766wFQ7oQN1TaIjKg2A",  # 这是一个示例模型，你应使用你的assistant模型ID
+        "prompt": prompt,
+        "max_tokens": 150,
+    }
+
+    response = requests.post('https://api.openai.com/v1/completions', headers=headers, data=json.dumps(data))
+    return response.json()["choices"][0]["text"].strip()
+
+@app.route("/callback", methods=['POST'])
+def callback():
+    # 获取LINE的签名
+    signature = request.headers['X-Line-Signature']
+
+    # 获取请求体
+    body = request.get_data(as_text=True)
+    app.logger.info("Request body: " + body)
+
+    # 验证请求
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+
+    return 'OK'
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    user_message = event.message.text
+    ai_response = get_openai_response(user_message)
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=ai_response))
+
+if __name__ == "__main__":
+    app.run()
+
+
 # 處理訊息
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
