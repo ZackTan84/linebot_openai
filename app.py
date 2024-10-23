@@ -57,9 +57,30 @@ def callback():
         abort(400)
     return 'OK'
 
+# 處理訊息
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    global conversation_history  # 声明为全局变量
+    msg = event.message.text
 
-line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
-handler = WebhookHandler(LINE_CHANNEL_SECRET)
+    # 将用户消息添加到对话历史
+    conversation_history.append({"role": "user", "content": msg})
+    
+    try:
+        GPT_answer = GPT_response(conversation_history)
+        print(GPT_answer)
+
+        # 将 GPT 的回复添加到对话历史
+        conversation_history.append({"role": "assistant", "content": GPT_answer})
+        
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=GPT_answer))
+    except:
+        print(traceback.format_exc())
+        line_bot_api.reply_message(
+            event.reply_token, 
+            TextSendMessage('你所使用的OPENAI API key額度可能已經超過，請於後台Log內確認錯誤訊息')
+        )
+
 
 def get_openai_response(prompt):
     headers = {
@@ -68,7 +89,7 @@ def get_openai_response(prompt):
     }
 
     data = {
-        "model": "asst_tHl6O766wFQ7oQN1TaIjKg2A",  # 这是一个示例模型，你应使用你的assistant模型ID
+        "model": "text-davinci-002",  # 这是一个示例模型，你应使用你的assistant模型ID
         "prompt": prompt,
         "max_tokens": 150,
     }
@@ -103,31 +124,6 @@ def handle_message(event):
 
 if __name__ == "__main__":
     app.run()
-
-
-# 處理訊息
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    global conversation_history  # 声明为全局变量
-    msg = event.message.text
-
-    # 将用户消息添加到对话历史
-    conversation_history.append({"role": "user", "content": msg})
-    
-    try:
-        GPT_answer = GPT_response(conversation_history)
-        print(GPT_answer)
-
-        # 将 GPT 的回复添加到对话历史
-        conversation_history.append({"role": "assistant", "content": GPT_answer})
-        
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=GPT_answer))
-    except:
-        print(traceback.format_exc())
-        line_bot_api.reply_message(
-            event.reply_token, 
-            TextSendMessage('你所使用的OPENAI API key額度可能已經超過，請於後台Log內確認錯誤訊息')
-        )
 
 @handler.add(PostbackEvent)
 def handle_message(event):
