@@ -81,50 +81,6 @@ def handle_message(event):
             TextSendMessage('你所使用的OPENAI API key額度可能已經超過，請於後台Log內確認錯誤訊息')
         )
 
-
-def get_openai_response(prompt):
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {OPENAI_API_KEY}',
-    }
-
-    data = {
-        "model": "text-davinci-002",  # 这是一个示例模型，你应使用你的assistant模型ID
-        "prompt": prompt,
-        "max_tokens": 150,
-    }
-
-    response = requests.post('https://api.openai.com/v1/completions', headers=headers, data=json.dumps(data))
-    return response.json()["choices"][0]["text"].strip()
-
-@app.route("/callback", methods=['POST'])
-def callback():
-    # 获取LINE的签名
-    signature = request.headers['X-Line-Signature']
-
-    # 获取请求体
-    body = request.get_data(as_text=True)
-    app.logger.info("Request body: " + body)
-
-    # 验证请求
-    try:
-        handler.handle(body, signature)
-    except InvalidSignatureError:
-        abort(400)
-
-    return 'OK'
-
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    user_message = event.message.text
-    ai_response = get_openai_response(user_message)
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=ai_response))
-
-if __name__ == "__main__":
-    app.run()
-
 @handler.add(PostbackEvent)
 def handle_message(event):
     print(event.postback.data)
