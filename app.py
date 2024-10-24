@@ -29,7 +29,7 @@ handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 openai.File.create(
-    file=open("mydata.jsonl", "rb"),
+    file=open("明日閱讀(後記).json", "rb"),
     purpose='fine-tune'
 )
 
