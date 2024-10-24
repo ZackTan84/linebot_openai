@@ -26,6 +26,11 @@ handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 # OPENAI API Key初始化設定
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
+openai.File.create(
+    file=open("mydata.jsonl", "rb"),
+    purpose='fine-tune'
+)
+
 # 用于存储对话历史
 conversation_history = []
 
