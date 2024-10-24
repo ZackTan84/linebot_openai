@@ -1,3 +1,4 @@
+
 from flask import Flask, request, abort
 
 from linebot import (
@@ -15,11 +16,9 @@ import openai
 import time
 import traceback
 #======python的函數庫==========
-pip install openai --upgrade
+
 app = Flask(__name__)
 static_tmp_path = os.path.join(os.path.dirname(__file__), 'static', 'tmp')
-
-wget https://raw.githubusercontent.com/ZackTan84/linebot_openai/refs/heads/master/%E6%98%8E%E6%97%A5%E9%96%B1%E8%AE%80(%E5%BE%8C%E8%A8%98).json
 
 # Channel Access Token
 line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
@@ -27,11 +26,6 @@ line_bot_api = LineBotApi(os.getenv('CHANNEL_ACCESS_TOKEN'))
 handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 # OPENAI API Key初始化設定
 openai.api_key = os.getenv('OPENAI_API_KEY')
-
-openai.File.create(
-    file=open("明日閱讀(後記).json", "rb"),
-    purpose='fine-tune'
-)
 
 # 用于存储对话历史
 conversation_history = []
