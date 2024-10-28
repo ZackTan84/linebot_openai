@@ -1,5 +1,5 @@
-
 from flask import Flask, request, abort
+import json
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -7,7 +7,7 @@ from linebot import (
 from linebot.exceptions import (
     InvalidSignatureError
 )
-from linebot.models import *
+from linebot.models import \*
 
 #======python的函數庫==========
 import tempfile, os
@@ -30,6 +30,20 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 # 用于存储对话历史
 conversation_history = []
 
+# 用于存储AI配置的JSON数据
+ASSISTANT_DATA = None
+
+def load_assistant_data():
+    global ASSISTANT_DATA
+    try:
+        # 假设JSON文件放置在项目根目录下
+        json_path = os.path.join(os.path.dirname(__file__), 'assistant_data.json')
+        with open(json_path, 'r', encoding='utf-8') as json_file:
+            ASSISTANT_DATA = json.load(json_file)
+            print("Assistant data loaded successfully.")
+    except Exception as e:
+        print(f"Failed to load assistant data: {e}")
+
 def GPT_response(messages):
     # 接收回應
     response = openai.ChatCompletion.create(
@@ -42,6 +56,9 @@ def GPT_response(messages):
     # 提取 GPT 的回复
     answer = response['choices'][0]['message']['content']
     return answer
+
+# 启动应用的时候加载AI配置的JSON数据
+load_assistant_data()
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
@@ -94,3 +111,6 @@ def welcome(event):
     name = profile.display_name
     message = TextSendMessage(text=f'{name}歡迎加入')
     line_bot_api.reply_message(event.reply_token, message)
+
+if __name__ == "__main__":
+    app.run()
