@@ -37,7 +37,7 @@ def load_assistant_data():
     global ASSISTANT_DATA
     try:
         # 假设JSON文件放置在项目根目录下
-        json_path = os.path.join(os.path.dirname(__file__), 'assistant_data.json')
+        json_path = os.path.join(os.path.dirname(__file__), '明日閱讀(後記).json')
         with open(json_path, 'r', encoding='utf-8') as json_file:
             ASSISTANT_DATA = json.load(json_file)
             print("Assistant data loaded successfully.")
