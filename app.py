@@ -47,7 +47,7 @@ def load_assistant_data():
 def GPT_response(messages):
     # 接收回應
     response = openai.ChatCompletion.create(
-        model="gpt-4o-mini-2024-07-18",
+        model="gpt-4o-mini",  # 修改模型名稱為 gpt-4o-mini
         messages=messages,
         temperature=0.5,
         max_tokens=500
