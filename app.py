@@ -35,7 +35,7 @@ def GPT_response(messages):
         model="gpt-5-mini",
         messages=messages,
         temperature=0.5,
-        max_tokens=500
+        max_completion_tokens=500
     )
 
     # 提取 GPT 的回复
