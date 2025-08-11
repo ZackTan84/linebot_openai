@@ -32,7 +32,7 @@ conversation_history = []
 def GPT_response(messages):
     # 接收回應
     response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         messages=messages,
         temperature=0.5,
         max_tokens=500
