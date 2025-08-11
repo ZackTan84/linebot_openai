@@ -34,7 +34,6 @@ def GPT_response(messages):
     response = openai.ChatCompletion.create(
         model="gpt-5-mini",
         messages=messages,
-        temperature=0.5,
         max_completion_tokens=500
     )
 
